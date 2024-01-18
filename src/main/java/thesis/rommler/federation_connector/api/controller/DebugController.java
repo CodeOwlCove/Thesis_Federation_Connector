@@ -14,7 +14,7 @@ import static java.lang.System.exit;
 public class DebugController {
 
     private FileReceiveService fileTransferService;
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
 
     @Autowired
     public DebugController(FileReceiveService fileTransferService, RestTemplate restTemplate){
