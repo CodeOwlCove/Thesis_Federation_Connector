@@ -35,7 +35,7 @@ public class LoginService {
         var serverPort = Integer.parseInt(environment.getProperty("server.port"));
         var hostName = environment.getProperty("server.address", "localhost");
 
-        String apiUrl = "http://localhost:9080/login?requester_ip="+hostName+"&requester_port="+serverPort+"&socket_port=10080";
+        String apiUrl = "http://localhost:12080/login?requester_ip="+hostName+"&requester_port="+serverPort+"&socket_port=10080";
 
         try {
             // Make a GET request and handle the response
@@ -50,6 +50,7 @@ public class LoginService {
 
         }catch (Exception e){
             logger.severe("- Error while logging in: " + e.getMessage());
+            logger.severe("- Could not establish connection to Federation Controller. Shutting down..." + e.getMessage());
             exit(-1);
         }
     }
