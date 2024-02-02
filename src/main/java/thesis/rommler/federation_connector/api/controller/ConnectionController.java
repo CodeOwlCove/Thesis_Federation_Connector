@@ -5,6 +5,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.event.SpringApplicationEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
@@ -26,7 +27,7 @@ public class ConnectionController {
     }
 
 
-
+    @CrossOrigin(origins = "*")
     @GetMapping("/ping")
     public String getUser(){
         return "pong";

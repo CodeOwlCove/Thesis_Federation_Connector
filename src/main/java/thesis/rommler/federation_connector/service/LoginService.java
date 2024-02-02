@@ -1,6 +1,7 @@
 package thesis.rommler.federation_connector.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
@@ -21,6 +22,10 @@ public class LoginService {
     @Autowired
     private Environment environment;
 
+    @Value("${controller.ip}") private String connectorIP;
+    @Value("${controller.port}") private String connectorPort;
+    @Value("${socket.port}") private String socketPort;
+
     public LoginService(RestTemplate restTemplate){
         this.restTemplate = restTemplate;
     }
@@ -35,7 +40,7 @@ public class LoginService {
         var serverPort = Integer.parseInt(environment.getProperty("server.port"));
         var hostName = environment.getProperty("server.address", "localhost");
 
-        String apiUrl = "http://localhost:12080/login?requester_ip="+hostName+"&requester_port="+serverPort+"&socket_port=10080";
+        String apiUrl = "http://"+connectorIP+":"+connectorPort+"/login?requester_ip="+hostName+"&requester_port="+serverPort+"&socket_port="+socketPort;
 
         try {
             // Make a GET request and handle the response

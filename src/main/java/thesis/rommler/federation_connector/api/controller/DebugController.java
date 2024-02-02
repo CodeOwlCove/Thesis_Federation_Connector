@@ -24,21 +24,7 @@ public class DebugController {
 
     @GetMapping("/debug1")
     public void Debug1(){
-        String apiUrl = "http://localhost:8080/GetFiles?request_ip=localhost&socket_port=7080";
 
-        // Make a GET request and handle the response
-        String response = restTemplate.getForObject(apiUrl, String.class);
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        try{
-            // Convert JSON string to Object
-            GetFilesAnswer getFilesAnswer = objectMapper.readValue(response, GetFilesAnswer.class);
-            // Handle the file transfer
-            fileTransferService.HandleFileTransfer(getFilesAnswer.port);
-        } catch (Exception e){
-            System.out.println("Error while converting : " + e.getMessage());
-            exit(1);
-        }
     }
 
     @GetMapping("/debug2")

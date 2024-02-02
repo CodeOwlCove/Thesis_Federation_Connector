@@ -1,5 +1,7 @@
     package thesis.rommler.federation_connector.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -7,29 +9,36 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-@Service
+import static java.lang.Thread.sleep;
+
+    @Service
 public class FileReceiveService {
 
-    private ExecutorService executorService;
+    private static final Logger logger = LoggerFactory.getLogger(FileReceiveService.class);
     private CompletableFuture<Void> fileCollectionTask;
     private CompletableFuture<Void> socketTask;
     private ServerSocket socket_server;
     private Socket client_socket;
+    private Thread fileTransferThread;
+    private Thread fileCollectionThread;
+    private Thread socketThread;
+    private UUID rarUUID = UUID.randomUUID();
+
+    private String zipFilePath = "F:\\Masterarbeit_Gits\\federation_connector\\src\\main\\resources\\Outgoing_"+rarUUID+".zip";
+    private String assetFolderPath = "F:\\Masterarbeit_Gits\\federation_connector\\src\\main\\resources\\Assets";
 
 
     private void CollectFiles(){
-        String sourceFolderPath = "F:\\Masterarbeit_Gits\\federation_connector\\Assets_Outgoing";
-        String zipFilePath = "F:\\Masterarbeit_Gits\\federation_connector\\Asset_Zip\\test.zip";
-
         ArrayList<File> fileList = new ArrayList<>();
 
-        File folder = new File(sourceFolderPath);
+        File folder = new File(assetFolderPath);
         File[] files = folder.listFiles();
         if (files != null) {
             for (File file : files) {
@@ -60,11 +69,6 @@ public class FileReceiveService {
 
     private static void CreateZipFile(String zipFilePath, ArrayList<File> filesToZip) {
 
-        //Delete Old File
-        if(new File(zipFilePath).exists()){
-            new File(zipFilePath).delete();
-        }
-
         //Create new File
         new File(zipFilePath);
 
@@ -75,13 +79,19 @@ public class FileReceiveService {
                 addToZip(file, zos);
             }
 
-            System.out.println("Zip file created successfully!");
+            logger.info("Zip file created: " + zipFilePath);
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    /**
+     * This method adds a file to the zip file
+     * @param file the file to be added
+     * @param zos the zip output stream
+     * @throws IOException exception thrown
+     */
     private static void addToZip(File file, ZipOutputStream zos) throws IOException {
         try (FileInputStream fis = new FileInputStream(file)) {
             String entryName = file.getName();
@@ -98,12 +108,15 @@ public class FileReceiveService {
         }
     }
 
+    /**
+     * This method sends the zip file to the federation controller
+     */
     private void TransferFiles(){
         try {
             OutputStream outputStream = client_socket.getOutputStream();
 
             // Send file name
-            String fileName = "F:\\Masterarbeit_Gits\\federation_connector\\Asset_Zip\\test.zip";
+            String fileName = zipFilePath;
             outputStream.write(fileName.getBytes());
 
             // Send file content
@@ -111,54 +124,105 @@ public class FileReceiveService {
             byte[] buffer = new byte[1024];
             int bytesRead;
             int bytesSent = 0;
+            int threshold = 0;
             while ((bytesRead = fileInputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, bytesRead);
                 bytesSent += bytesRead;
-                System.out.println("Progress: " + bytesSent + " bytes sent");
+                if(bytesSent > threshold){
+                    threshold += 1000000;
+                    logger.info("Progress: " + bytesSent + " MB sent.");
+                }
             }
+            logger.info("Bytes sent: " + bytesSent);
 
             // Send a specific delimiter to indicate the end of the file content
-            String endOfFileDelimiter = "END_OF_FILE";
+            String endOfFileDelimiter = "End_Of_File";
             outputStream.write(endOfFileDelimiter.getBytes(StandardCharsets.UTF_8));
 
             fileInputStream.close();
-            socket_server.close();
 
             System.out.println("File sent: " + fileName);
+
         }catch (Exception e){
             System.out.println("Error while transferring files.");
             e.printStackTrace();
         }
     }
 
+    /**
+     * This method starts the socket server
+     * @param socketPort the port on which the socket should listen
+     */
     public void StartSocket(int socketPort){
         try {
+            // Create a socket server
             socket_server = new ServerSocket(socketPort);
-            System.out.println("Socket listening on port " + socketPort + ".");
-            client_socket = socket_server.accept();
-            System.out.println("Client connected on ip: " + client_socket.getInetAddress().toString());
+            logger.info("Socket server started on port " + socketPort);
         } catch (Exception e) {
             System.out.println("Error while creating socket connection.");
             e.printStackTrace();
         }
     }
 
+    /**
+     * This method listens on the socket and starts the file transfer process
+     */
+    public void ListenOnSocket(){
+        try {
+            logger.info("Listening on socket on port " + socket_server.getLocalPort() + "...");
+            // Listen for a connection
+            client_socket = socket_server.accept();
+            logger.info("Client connected on ip: " + client_socket.getInetAddress().toString());
+
+            // Start the file transfer process
+            fileTransferThread = new Thread(this::TransferFiles);
+            fileTransferThread.start();
+
+            // Wait for the file transfer to finish
+            try {
+                fileTransferThread.join();
+            }catch (Exception e){
+                logger.error("Error while waiting for file transfer to finish. " + e.getMessage());
+            }
+
+        }catch (Exception e){
+            logger.info("Error while listening on socket.");
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * This method handles the file transfer process
+     * @param socketPort the port on which the socket should listen
+     */
     public void HandleFileTransfer(int socketPort) {
-        executorService = Executors.newFixedThreadPool(2);
-        fileCollectionTask = CompletableFuture.runAsync(() -> {
-            CollectFiles();
-            System.out.println("Files Collected");
-        }, executorService);
+        // Create a thread for the file collection
+        fileCollectionThread = new Thread(this::CollectFiles);
+        logger.info("Starting file collection...");
+        fileCollectionThread.start();
 
-        socketTask = CompletableFuture.runAsync(() -> {
-            StartSocket(socketPort);
-            System.out.println("Socket started");
-        }, executorService);
+        StartSocket(socketPort);
 
-        CompletableFuture.allOf(fileCollectionTask, socketTask).join();
+        try{
+            fileCollectionThread.join();
+            logger.info("File collection finished.");
+        }catch (Exception e){
+            logger.error("Error while waiting for file collection to finish. " + e.getMessage());
+        }
 
-        executorService.shutdown();
+        // Start listening on the socket
+        logger.info("Starting socket listener on port " + socketPort + "...");
+        socketThread = new Thread(this::ListenOnSocket);
+        socketThread.start();
+    }
 
-        TransferFiles();
+    public void CloseSocket(){
+        try {
+            new File(zipFilePath).delete();
+            socket_server.close();
+            logger.info("Socket closed.");
+        }catch (Exception e){
+            logger.error("Error while closing socket. " + e.getMessage());
+        }
     }
 }
