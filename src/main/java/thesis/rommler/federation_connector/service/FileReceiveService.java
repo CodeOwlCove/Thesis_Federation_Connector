@@ -31,8 +31,8 @@ public class FileReceiveService {
     private Thread socketThread;
     private UUID rarUUID = UUID.randomUUID();
 
-    private String zipFilePath = "F:\\Masterarbeit_Gits\\federation_connector\\src\\main\\resources\\Outgoing_"+rarUUID+".zip";
-    private String assetFolderPath = "F:\\Masterarbeit_Gits\\federation_connector\\src\\main\\resources\\Assets";
+    private String zipFilePath = "src/main/resources/Outgoing/Outgoing_"+rarUUID+".zip";
+    private String assetFolderPath = "src/main/resources/Assets";
 
 
     private void CollectFiles(){
@@ -154,6 +154,12 @@ public class FileReceiveService {
      * @param socketPort the port on which the socket should listen
      */
     public void StartSocket(int socketPort){
+        if(socket_server != null && !socket_server.isClosed()){
+            logger.info("Socket still open. Closing socket...");
+            CloseSocket();
+        }else
+            logger.info("Starting new socket on port " + socketPort + "...");
+
         try {
             // Create a socket server
             socket_server = new ServerSocket(socketPort);
@@ -191,11 +197,33 @@ public class FileReceiveService {
         }
     }
 
+    public void CheckForFolders(){
+        File assetsFolder = new File(assetFolderPath);
+        if (!assetsFolder.exists()) {
+            assetsFolder.mkdirs();
+        }
+        File outgoingFolder = new File("src/main/resources/Outgoing");
+        if (!outgoingFolder.exists()) {
+            outgoingFolder.mkdirs();
+        }
+    }
+
+    public void DeleteSentZipFile(){
+        try {
+            new File(zipFilePath).delete();
+            logger.info("Sent zip file deleted.");
+        }catch (Exception e){
+            logger.error("Error while deleting sent zip file. " + e.getMessage());
+        }
+    }
+
     /**
      * This method handles the file transfer process
      * @param socketPort the port on which the socket should listen
      */
     public void HandleFileTransfer(int socketPort) {
+        CheckForFolders();
+
         // Create a thread for the file collection
         fileCollectionThread = new Thread(this::CollectFiles);
         logger.info("Starting file collection...");
@@ -220,9 +248,18 @@ public class FileReceiveService {
         try {
             new File(zipFilePath).delete();
             socket_server.close();
+
+            while(!socket_server.isClosed()){
+                socket_server.close();
+            }
+
+            socket_server = null;
+
             logger.info("Socket closed.");
         }catch (Exception e){
             logger.error("Error while closing socket. " + e.getMessage());
+        } finally {
+            DeleteSentZipFile();
         }
     }
 }

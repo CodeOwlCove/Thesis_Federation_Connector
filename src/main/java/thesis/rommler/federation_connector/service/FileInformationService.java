@@ -20,7 +20,7 @@ public class FileInformationService {
     public ArrayList<FileInformation> CollectFileInformation(){
         ArrayList<FileInformation> fileInformation = new ArrayList<FileInformation>();
 
-        String directoryPath = "F:\\Masterarbeit_Gits\\federation_connector\\src\\main\\resources\\Assets";
+        String directoryPath = "src/main/resources/Assets/";
         List<File> files = getFiles(directoryPath);
 
         for (File file : files) {
