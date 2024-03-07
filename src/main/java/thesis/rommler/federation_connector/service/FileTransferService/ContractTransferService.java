@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import thesis.rommler.federation_connector.service.ConnectionService;
 
@@ -19,6 +20,9 @@ public class ContractTransferService extends FileTransferService {
 
     // This is stupid, but I want to create a thread using a parameter
     private String contractName;
+
+    @Value("${contract_folder_path}") private String contractFolderPath;
+    @Value("${contract_file_path}") private String contractFilePath;
 
     public ContractTransferService(ConnectionService connectionService) {
         super(connectionService);
@@ -61,7 +65,7 @@ public class ContractTransferService extends FileTransferService {
 
         try {
             // Read JSON file as JsonNode
-            JsonNode rootNode = objectMapper.readTree(new File("src/main/resources/Contract_Config.json"));
+            JsonNode rootNode = objectMapper.readTree(new File(contractFilePath));
 
             // Get the "contract_links" array
             JsonNode contractLinksArray = rootNode.get("contract_links");
@@ -85,7 +89,7 @@ public class ContractTransferService extends FileTransferService {
     private void CollectContractFile(){
         ArrayList<File> fileList = new ArrayList<>();
 
-        File folder = new File(assetFolderPath);
+        File folder = new File(contractFolderPath);
         File[] files = folder.listFiles();
         if (files != null) {
             for (File file : files) {

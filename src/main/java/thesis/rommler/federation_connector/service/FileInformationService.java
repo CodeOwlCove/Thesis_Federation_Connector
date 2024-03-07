@@ -2,6 +2,7 @@ package thesis.rommler.federation_connector.service;
 
 import org.springframework.stereotype.Service;
 import thesis.rommler.federation_connector.api.answerClasses.FileInformation;
+import thesis.rommler.federation_connector.service.FileTransferService.FileTransferService;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -11,7 +12,11 @@ import java.util.List;
  * This class is responsible for collecting information about the files in the Assets folder.
  */
 @Service
-public class FileInformationService {
+public class FileInformationService extends FileTransferService{
+
+    public FileInformationService(ConnectionService connectionService) {
+        super(connectionService);
+    }
 
     /**
      * Collects all files from the Assets folder and returns them as a list of FileInformation objects.
@@ -20,16 +25,21 @@ public class FileInformationService {
     public ArrayList<FileInformation> CollectFileInformation(){
         ArrayList<FileInformation> fileInformation = new ArrayList<FileInformation>();
 
-        String directoryPath = "src/main/resources/Assets/";
-        List<File> files = getFiles(directoryPath);
+        List<File> files = getFiles(assetFolderPath);
+
+        System.out.println("Collecting file information from: " + assetFolderPath + "...");
 
         for (File file : files) {
             fileInformation.add(new FileInformation(file.getName(), getExtension(file.getName()), String.format("%,d", file.length())));
         }
 
+
+        System.out.println("FileInformation: | Filename | Filetype | Filesize |" + fileInformation.toString());
         for (FileInformation file : fileInformation) {
             System.out.println("FileInformation: | " + file.filename + " | " + file.filetype + " | " + file.filesize + " |");
         }
+
+        System.out.println("Returning file information: " + fileInformation.toString());
 
         return fileInformation;
     }

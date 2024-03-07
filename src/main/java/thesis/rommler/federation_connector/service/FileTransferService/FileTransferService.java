@@ -3,6 +3,7 @@ package thesis.rommler.federation_connector.service.FileTransferService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import thesis.rommler.federation_connector.service.ConnectionService;
 
 import java.io.*;
@@ -26,7 +27,8 @@ public class FileTransferService {
     protected ConnectionService connectionService;
     private String rarUUID;
     protected String zipFilePath = "src/main/resources/Outgoing/Outgoing_"+rarUUID+".zip";
-    protected String assetFolderPath = "src/main/resources/Assets";
+
+    @Value("${asset_folder_path}") protected String assetFolderPath;
 
 
     @Autowired
@@ -155,7 +157,7 @@ public class FileTransferService {
             }
 
             logger.info("Deleting sent zip file...");
-            DeleteSentZipFile();
+            //DeleteSentZipFile();
 
         }catch (Exception e){
             logger.info("Error while listening on socket.");

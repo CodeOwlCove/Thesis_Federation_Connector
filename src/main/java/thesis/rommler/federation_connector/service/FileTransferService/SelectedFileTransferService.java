@@ -2,6 +2,7 @@ package thesis.rommler.federation_connector.service.FileTransferService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import thesis.rommler.federation_connector.service.ConnectionService;
 
@@ -16,6 +17,12 @@ public class SelectedFileTransferService extends FileTransferService {
 
     // This is stupid, but I want to create a thread using a parameter
     private String[] fileNames;
+
+    @Value("${asset_folder_path}") private String assetFolderPath;
+
+    @Value("${controller.ip}") private String connectorIP;
+    @Value("${controller.port}") private String connectorPort;
+    @Value("${socket.port}") private String socketPort;
 
     public SelectedFileTransferService(ConnectionService connectionService) {
         super(connectionService);

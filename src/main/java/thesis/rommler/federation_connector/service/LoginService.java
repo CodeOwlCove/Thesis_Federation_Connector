@@ -1,20 +1,23 @@
 package thesis.rommler.federation_connector.service;
 
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 import static java.lang.System.exit;
 
 @Service
-public class LoginService {
+public class LoginService implements DisposableBean {
 
     private Logger logger = Logger.getLogger(LoginService.class.getName());
     private RestTemplate restTemplate;
@@ -26,8 +29,13 @@ public class LoginService {
     @Value("${controller.port}") private String connectorPort;
     @Value("${socket.port}") private String socketPort;
 
-    public LoginService(RestTemplate restTemplate){
+    private String hostIPAdress;
+
+    public LoginService(RestTemplate restTemplate) throws UnknownHostException {
         this.restTemplate = restTemplate;
+
+        hostIPAdress = InetAddress.getLocalHost().toString().split("/")[1];
+        logger.info("- Hostname: " + hostIPAdress);
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -38,9 +46,10 @@ public class LoginService {
 
     private void LogIn(){
         var serverPort = Integer.parseInt(environment.getProperty("server.port"));
-        var hostName = environment.getProperty("server.address", "localhost");
 
-        String apiUrl = "http://"+connectorIP+":"+connectorPort+"/login?requester_ip="+hostName+"&requester_port="+serverPort+"&socket_port="+socketPort;
+        String apiUrl = "http://" + connectorIP+":"+connectorPort+"/login?requester_ip="+hostIPAdress+"&requester_port="+serverPort+"&socket_port="+socketPort;
+
+        System.out.println("API URL: " + apiUrl);
 
         try {
             // Make a GET request and handle the response
@@ -57,6 +66,33 @@ public class LoginService {
             logger.severe("- Error while logging in: " + e.getMessage());
             logger.severe("- Could not establish connection to Federation Controller. Shutting down..." + e.getMessage());
             exit(-1);
+        }
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        System.out.println("(Start) Application is shutting down...");
+
+        var serverPort = Integer.parseInt(Objects.requireNonNull(environment.getProperty("server.port")));
+        var hostName = environment.getProperty("server.address", "localhost");
+
+        String apiUrl = "http://" + connectorIP+":"+connectorPort+"/logout?requester_ip="+hostName+"&requester_port="+serverPort;
+
+        try {
+            // Make a GET request and handle the response
+            String response = restTemplate.getForObject(apiUrl, String.class);
+
+            if(response.equals("ok"))
+                System.out.println("Logged out successfully.");
+            else {
+                System.out.println("Error while logging out.");
+            }
+
+        }catch (Exception e){
+            System.out.println("Error while logging out: " + e.getMessage());
+            throw new Exception("Error while logging out: " + e.getMessage());
+        } finally {
+            System.out.println("(End) Application is shutting down...");
         }
     }
 }

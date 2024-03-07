@@ -26,6 +26,7 @@ public class FileInformationController {
 
     @GetMapping("/GetFileInformation")
     public ResponseEntity<ArrayList<FileInformation>> getFileInformation() {
+        System.out.println("GetFileInformation request received");
         return ResponseEntity.ok().body(fileInformationService.CollectFileInformation());
     }
 }
