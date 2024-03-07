@@ -48,6 +48,7 @@ public class AllFileTransferService extends FileTransferService {
         socketThread.start();
     }
 
+
     private void CollectFiles(){
         ArrayList<File> fileList = new ArrayList<>();
 

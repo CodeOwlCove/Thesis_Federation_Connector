@@ -1,0 +1,1 @@
+This is the default contract for a lot of files!

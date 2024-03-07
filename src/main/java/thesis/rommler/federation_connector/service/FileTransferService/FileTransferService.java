@@ -19,8 +19,6 @@ import java.util.zip.ZipOutputStream;
 public class FileTransferService {
 
     private static final Logger logger = LoggerFactory.getLogger(FileTransferService.class);
-    protected CompletableFuture<Void> fileCollectionTask;
-    protected CompletableFuture<Void> socketTask;
     protected Socket client_socket;
     protected Thread fileTransferThread;
     protected Thread fileCollectionThread;
@@ -35,6 +33,7 @@ public class FileTransferService {
     public FileTransferService(ConnectionService connectionService){
         this.connectionService = connectionService;
         rarUUID = UUID.randomUUID().toString();
+        zipFilePath = "src/main/resources/Outgoing/Outgoing_"+rarUUID+".zip";
     }
 
 
