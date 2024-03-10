@@ -126,10 +126,10 @@ public class FileTransferService {
 
             fileInputStream.close();
 
-            System.out.println("File sent: " + fileName);
+            logger.info("File sent: " + fileName);
 
         }catch (Exception e){
-            System.out.println("Error while transferring files.");
+            logger.error("Error while transferring files.");
             e.printStackTrace();
         }
     }
@@ -157,7 +157,7 @@ public class FileTransferService {
             }
 
             logger.info("Deleting sent zip file...");
-            //DeleteSentZipFile();
+            DeleteSentZipFile();
 
         }catch (Exception e){
             logger.info("Error while listening on socket.");
@@ -184,4 +184,21 @@ public class FileTransferService {
             logger.error("Error while deleting sent zip file. " + e.getMessage());
         }
     }
+
+    //Checks the Asset folder if it contains at least one file with one of the given names in the String[]
+    public boolean CheckForFiles(String[] fileNames){
+        File assetsFolder = new File(assetFolderPath);
+        File[] files = assetsFolder.listFiles();
+        if(files != null){
+            for(File file : files){
+                for(String fileName : fileNames){
+                    if(file.getName().equals(fileName)){
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
 }

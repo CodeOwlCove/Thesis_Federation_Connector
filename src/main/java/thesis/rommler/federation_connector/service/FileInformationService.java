@@ -2,17 +2,21 @@ package thesis.rommler.federation_connector.service;
 
 import org.springframework.stereotype.Service;
 import thesis.rommler.federation_connector.api.answerClasses.FileInformation;
+import thesis.rommler.federation_connector.api.controller.FileInformationController;
 import thesis.rommler.federation_connector.service.FileTransferService.FileTransferService;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 /**
  * This class is responsible for collecting information about the files in the Assets folder.
  */
 @Service
 public class FileInformationService extends FileTransferService{
+
+    private Logger logger = Logger.getLogger(FileInformationService.class.getName());
 
     public FileInformationService(ConnectionService connectionService) {
         super(connectionService);
@@ -27,19 +31,11 @@ public class FileInformationService extends FileTransferService{
 
         List<File> files = getFiles(assetFolderPath);
 
-        System.out.println("Collecting file information from: " + assetFolderPath + "...");
+        logger.info("Collecting file information from: " + assetFolderPath + "...");
 
         for (File file : files) {
             fileInformation.add(new FileInformation(file.getName(), getExtension(file.getName()), String.format("%,d", file.length())));
         }
-
-
-        System.out.println("FileInformation: | Filename | Filetype | Filesize |" + fileInformation.toString());
-        for (FileInformation file : fileInformation) {
-            System.out.println("FileInformation: | " + file.filename + " | " + file.filetype + " | " + file.filesize + " |");
-        }
-
-        System.out.println("Returning file information: " + fileInformation.toString());
 
         return fileInformation;
     }

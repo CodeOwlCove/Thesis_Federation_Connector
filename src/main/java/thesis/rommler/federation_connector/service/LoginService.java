@@ -49,8 +49,6 @@ public class LoginService implements DisposableBean {
 
         String apiUrl = "http://" + connectorIP+":"+connectorPort+"/login?requester_ip="+hostIPAdress+"&requester_port="+serverPort+"&socket_port="+socketPort;
 
-        System.out.println("API URL: " + apiUrl);
-
         try {
             // Make a GET request and handle the response
             String response = restTemplate.getForObject(apiUrl, String.class);
@@ -71,28 +69,24 @@ public class LoginService implements DisposableBean {
 
     @Override
     public void destroy() throws Exception {
-        System.out.println("(Start) Application is shutting down...");
+        logger.info("Application is shutting down...");
 
         var serverPort = Integer.parseInt(Objects.requireNonNull(environment.getProperty("server.port")));
-        var hostName = environment.getProperty("server.address", "localhost");
 
-        String apiUrl = "http://" + connectorIP+":"+connectorPort+"/logout?requester_ip="+hostName+"&requester_port="+serverPort;
+        String apiUrl = "http://" + connectorIP+":"+connectorPort+"/logout?requester_ip="+hostIPAdress+"&requester_port="+serverPort;
 
         try {
             // Make a GET request and handle the response
             String response = restTemplate.getForObject(apiUrl, String.class);
 
             if(response.equals("ok"))
-                System.out.println("Logged out successfully.");
+                logger.info("Logged out successfully.");
             else {
-                System.out.println("Error while logging out.");
+                logger.severe("Error while logging out.");
             }
 
         }catch (Exception e){
-            System.out.println("Error while logging out: " + e.getMessage());
             throw new Exception("Error while logging out: " + e.getMessage());
-        } finally {
-            System.out.println("(End) Application is shutting down...");
         }
     }
 }

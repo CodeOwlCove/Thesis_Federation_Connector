@@ -32,16 +32,4 @@ public class ConnectionController {
     public String getUser(){
         return "pong";
     }
-
-    @GetMapping("/GetAllFiles")
-    public String getAllFiles(){
-        String apiUrl = "localhost:8080/Ping";
-
-        // Make a GET request and handle the response
-        String response = restTemplate.getForObject(apiUrl, String.class);
-
-        // Process the response as needed
-        System.out.println("Response from the API: " + response);
-        return "ok";
-    }
 }

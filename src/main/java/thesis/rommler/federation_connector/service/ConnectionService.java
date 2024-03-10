@@ -40,7 +40,7 @@ public class ConnectionService {
         }catch (BindException e){
             logger.info("Port " + socketPort + " is already in use...");
         } catch (Exception e) {
-            System.out.println("Error while creating socket connection.");
+            logger.error("Error while creating socket connection.");
             e.printStackTrace();
         }
     }
