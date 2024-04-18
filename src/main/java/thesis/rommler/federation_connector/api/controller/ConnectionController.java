@@ -26,7 +26,6 @@ public class ConnectionController {
         this.restTemplate = restTemplate;
     }
 
-
     @CrossOrigin(origins = "*")
     @GetMapping("/ping")
     public String getUser(){

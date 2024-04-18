@@ -50,6 +50,7 @@ public class AllFileTransferService extends FileTransferService {
 
 
     private void CollectFiles(){
+        logger.info("Collecting files...");
         ArrayList<File> fileList = new ArrayList<>();
 
         File folder = new File(assetFolderPath);
@@ -59,6 +60,7 @@ public class AllFileTransferService extends FileTransferService {
                 if (file.isDirectory()) {
                     getAllFiles(file, fileList);
                 } else {
+                    logger.info("Adding file to send: " + file.getName());
                     fileList.add(file);
                 }
             }

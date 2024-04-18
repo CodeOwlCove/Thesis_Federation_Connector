@@ -53,6 +53,7 @@ public class FileTransferService {
     }
 
     protected static void CreateZipFile(String zipFilePath, ArrayList<File> filesToZip) {
+        logger.info("Creating zip file at: " + zipFilePath);
 
         //Create new File
         new File(zipFilePath);
@@ -78,6 +79,7 @@ public class FileTransferService {
      * @throws IOException exception thrown
      */
     protected static void addToZip(File file, ZipOutputStream zos) throws IOException {
+        logger.info("Add File to zip (for sending): " + file.getName());
         try (FileInputStream fis = new FileInputStream(file)) {
             String entryName = file.getName();
             ZipEntry zipEntry = new ZipEntry(entryName);
@@ -109,14 +111,15 @@ public class FileTransferService {
             byte[] buffer = new byte[1024];
             int bytesRead;
             int bytesSent = 0;
-            int threshold = 0;
+            int chunksSend = 0;
             while ((bytesRead = fileInputStream.read(buffer)) != -1) {
                 outputStream.write(buffer, 0, bytesRead);
                 bytesSent += bytesRead;
-                if(bytesSent > threshold){
-                    threshold += 1000000;
-                    logger.info("Progress: " + bytesSent + " MB sent.");
+                if(chunksSend >= 10000){
+                    chunksSend = 0;
+                    logger.info("Progress: " + bytesSent + " Bytes sent.");
                 }
+                chunksSend++;
             }
             logger.info("Bytes sent: " + bytesSent);
 

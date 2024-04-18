@@ -33,11 +33,14 @@ public class SocketController {
 
     @GetMapping("/StartAllFilesSocket")
     public String StartSocket(@RequestParam int socket_port){
+        logger.info("- Start All Files Socket");
         try {
             allFileTransferService.HandleFileTransfer(socket_port);
+            System.gc();
             return "socket_started";
         } catch (Exception e) {
             e.printStackTrace();
+            System.gc();
             return "socket_failed";
         }
     }
@@ -48,9 +51,11 @@ public class SocketController {
 
         try {
             selectedFileTransferService.HandleFileTransfer(socket_port, file_name);
+            System.gc();
             return "socket_started";
         } catch (Exception e) {
             e.printStackTrace();
+            System.gc();
             return "socket_failed";
         }
     }
@@ -62,6 +67,7 @@ public class SocketController {
 
         try {
             contractTransferService.HandleFileTransfer(socket_port, file_name);
+            System.gc();
             return "socket_started";
         } catch (Exception e) {
             e.printStackTrace();
@@ -78,12 +84,13 @@ public class SocketController {
                 connectionService.CloseSocket();
 
             logger.info("- Socket closed.");
-
+            System.gc();
             return "socket_closed";
         } catch (Exception e) {
 
             logger.error("- Error while closing socket.");
             e.printStackTrace();
+            System.gc();
             return "socket_failed";
         }
     }
